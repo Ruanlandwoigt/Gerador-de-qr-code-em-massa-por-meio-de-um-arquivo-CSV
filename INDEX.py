@@ -7,13 +7,13 @@ def clean_filename(name):
     # Substitui caracteres inválidos por underscores
     return re.sub(r'[<>:"/\\|?*]', '_', name)
 
-def create_qr_code(data, output_path, font):
+def create_qr_code(data, output_path, font_size, resolution):
     # Crie um objeto QRCode
     qr = qrcode.QRCode(
-        version=1,
+        version=5,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
-        border=4,
+        border=10,
     )
 
     # Adicione os dados ao QRCode
@@ -29,19 +29,24 @@ def create_qr_code(data, output_path, font):
     # Crie um retângulo preto ao redor do QRCode (moldura)
     draw = ImageDraw.Draw(img)
     draw.rectangle(
-        [(2, img.size[1] - 25), (img.size[0] - 2, img.size[1])],
+        [(0, 0), (img.size[0] - 0, 50)],  # Posição ajustada para ficar mais acima
         fill="black",
     )
 
+    # Carregue uma fonte TrueType
+    font = ImageFont.truetype("arial.ttf", size=font_size)
+
     # Adicione o texto da moldura à imagem
-    font_size = 40  # Ajuste este valor para o tamanho desejado
-    font = ImageFont.load_default()
     text_bbox = draw.textbbox((0, 0), text_frame, font)
     text_position = (
         (img.size[0] - text_bbox[0]) // 2,
-        img.size[1] - 12 - (text_bbox[1] // 2),
+        5,  # Posição ajustada para ficar mais acima
     )
     draw.text(text_position, text_frame, font=font, fill="white")
+
+    # Ajuste o tamanho da imagem
+    image_size = (resolution, resolution)
+    img = img.resize(image_size)
 
     # Salve a imagem com um nome de arquivo limpo
     img.save(clean_filename(output_path))
@@ -54,7 +59,9 @@ def main(csv_file_path):
                 if row:  # Verifica se a linha não está vazia antes de acessar o índice
                     data = row[0]
                     output_path = f'{data}.jpg'  # Pode ajustar o nome do arquivo de saída conforme necessário
-                    create_qr_code(data, output_path, font=None)
+                    font_size = 40  # Ajuste este valor para o tamanho desejado
+                    resolution = 500  # Ajuste este valor para a resolução desejada
+                    create_qr_code(data, output_path, font_size, resolution)
     except FileNotFoundError:
         print(f"O arquivo {csv_file_path} não existe.")
 
